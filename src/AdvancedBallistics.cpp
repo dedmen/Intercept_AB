@@ -118,10 +118,10 @@ void __stdcall RVExtension(char *output, int outputSize, const char *function)
         double airFriction = 0.0;
         char* ballisticCoefficientArray;
         char* ballisticCoefficient;
-        std::vector<double> ballisticCoefficients;
+        std::vector<float> ballisticCoefficients;
         char* velocityBoundaryArray;
         char* velocityBoundary;
-        std::vector<double> velocityBoundaries;
+        std::vector<float> velocityBoundaries;
         char* atmosphereModel;
         int dragModel = 1;
         double stabilityFactor = 1.5;
@@ -130,7 +130,7 @@ void __stdcall RVExtension(char *output, int outputSize, const char *function)
         double muzzleVelocity = 850;
         char* originArray;
         char* originEntry;
-        std::vector<double> origin;
+        std::vector<float> origin;
         double latitude = 0.0;
         double temperature = 0.0;
         double altitude = 0.0;
@@ -192,7 +192,7 @@ void __stdcall RVExtension(char *output, int outputSize, const char *function)
         bulletDatabase[index].twistDirection = twistDirection;
         bulletDatabase[index].transonicStabilityCoef = transonicStabilityCoef;
         bulletDatabase[index].muzzleVelocity = muzzleVelocity;
-        bulletDatabase[index].origin = origin;
+        bulletDatabase[index].origin = { origin[0],origin[1],origin[2] };
         bulletDatabase[index].latitude = latitude / 180 * M_PI;
         bulletDatabase[index].temperature = temperature;
         bulletDatabase[index].altitude = altitude;
@@ -246,9 +246,9 @@ void __stdcall RVExtension(char *output, int outputSize, const char *function)
             bulletDatabase[index].randSeed *= 3;
             bulletDatabase[index].randSeed += (unsigned)round(abs(velocity[2]) / 2);
             bulletDatabase[index].randSeed *= 3;
-            bulletDatabase[index].randSeed += (unsigned)round(abs(bulletDatabase[index].origin[0] / 2));
+            bulletDatabase[index].randSeed += (unsigned)round(abs(bulletDatabase[index].origin.x / 2));
             bulletDatabase[index].randSeed *= 3;
-            bulletDatabase[index].randSeed += (unsigned)round(abs(bulletDatabase[index].origin[1] / 2));
+            bulletDatabase[index].randSeed += (unsigned)round(abs(bulletDatabase[index].origin.y / 2));
             bulletDatabase[index].randSeed *= 3;
             bulletDatabase[index].randSeed += (unsigned)abs(bulletDatabase[index].temperature) * 10;
             bulletDatabase[index].randSeed *= 3;
@@ -366,7 +366,7 @@ void __stdcall RVExtension(char *output, int outputSize, const char *function)
                 }
             }
 
-            ballisticCoefficient = calculateAtmosphericCorrection(ballisticCoefficient, temperature, pressure, bulletDatabase[index].humidity, bulletDatabase[index].atmosphereModel);
+            ballisticCoefficient = calculateAtmosphericCorrection(ballisticCoefficient, temperature, pressure, bulletDatabase[index].humidity, bulletDatabase[index].atmosphereModel.c_str());
             ballisticCoefficient *= bulletDatabase[index].bcDegradation;
             drag = deltaT * calculateRetard(bulletDatabase[index].dragModel, ballisticCoefficient, trueSpeed, SPEED_OF_SOUND(temperature));
             accel[0] = (trueVelocity[0] / trueSpeed) * drag;

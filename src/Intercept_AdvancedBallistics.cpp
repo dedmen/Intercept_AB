@@ -33,9 +33,9 @@ game_value AB::simulate(game_value left, game_value right) {
         bulletDatabase[index].randSeed *= 3;
         bulletDatabase[index].randSeed += (unsigned) round(abs(velocity.z) / 2);
         bulletDatabase[index].randSeed *= 3;
-        bulletDatabase[index].randSeed += (unsigned) round(abs(bulletDatabase[index].origin[0] / 2));
+        bulletDatabase[index].randSeed += (unsigned) round(abs(bulletDatabase[index].origin.x / 2));
         bulletDatabase[index].randSeed *= 3;
-        bulletDatabase[index].randSeed += (unsigned) round(abs(bulletDatabase[index].origin[1] / 2));
+        bulletDatabase[index].randSeed += (unsigned) round(abs(bulletDatabase[index].origin.y / 2));
         bulletDatabase[index].randSeed *= 3;
         bulletDatabase[index].randSeed += (unsigned) abs(bulletDatabase[index].temperature) * 10;
         bulletDatabase[index].randSeed *= 3;
@@ -261,6 +261,7 @@ intercept::types::game_value AB::newBullet(game_value right) {
     bulletDatabase[index].lastFrame = tickTime;
     bulletDatabase[index].bcDegradation = 1.0;
     bulletDatabase[index].randSeed = 0;
+    return {};
 }
 
 game_value AB::worldInit(game_value left, game_value right) {
