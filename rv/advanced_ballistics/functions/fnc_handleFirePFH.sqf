@@ -16,7 +16,7 @@
 #include "script_component.hpp"
 
 private _aceTimeSecond = floor CBA_missionTime;
-
+isNil {"allBullets";
 {
     _x params ["_bullet","_caliber","_bulletTraceVisible","_index"];
 
@@ -33,13 +33,17 @@ private _aceTimeSecond = floor CBA_missionTime;
             drop ["\A3\data_f\ParticleEffects\Universal\Refract","","Billboard",1,0.1,getPos _bullet,[0,0,0],0,1.275,1,0,[0.02*_caliber,0.01*_caliber],[[0,0,0,0.65],[0,0,0,0.2]],[1,0],0,0,"","",""];
         };
 
-		_bullet advancedBallisticsSimulate [_index,_bulletVelocity, _bulletPosition, ACE_wind, ASLToATL(_bulletPosition) select 2, _aceTimeSecond, CBA_missionTime - _aceTimeSecond];
-		
-        //_bullet setVelocity (_bulletVelocity vectorAdd (parseSimpleArray ("ace_advanced_ballistics" callExtension format["simulate:%1:%2:%3:%4:%5:%6:%7", _index, _bulletVelocity, _bulletPosition, ACE_wind, ASLToATL(_bulletPosition) select 2, _aceTimeSecond, CBA_missionTime - _aceTimeSecond])));
+		isNil {
+			_bullet advancedBallisticsSimulate [_index,_bulletVelocity, _bulletPosition, ACE_wind, ASLToATL(_bulletPosition) select 2, _aceTimeSecond, CBA_missionTime - _aceTimeSecond];
+			//_bullet setVelocity (_bulletVelocity vectorAdd (parseSimpleArray 
+				//("ace_advanced_ballistics" callExtension format["simulate:%1:%2:%3:%4:%5:%6:%7", _index, _bulletVelocity, _bulletPosition, ACE_wind, ASLToATL(_bulletPosition) select 2, _aceTimeSecond, CBA_missionTime - _aceTimeSecond])
+			//));
+			true;
+		};
     };
     nil
 } count +GVAR(allBullets);
-
+};
 if (GVAR(allBullets) isEqualTo []) then {
     [_this select 1] call CBA_fnc_removePerFrameHandler;
     GVAR(BulletPFH) = nil;

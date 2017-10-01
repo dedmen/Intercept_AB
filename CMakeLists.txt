@@ -1,8 +1,6 @@
 cmake_minimum_required (VERSION 3.6)
 project (advanced_ballistics)
 
-find_package (Threads)
-
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules)
 include(${PROJECT_SOURCE_DIR}/CMakeModules/cxx_compiler_functions.cmake)
 
