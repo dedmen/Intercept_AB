@@ -22,6 +22,10 @@ SOURCE_GROUP("src" FILES ${INTERCEPT_NETWORK_SOURCES})
 set(library_sources ${INTERCEPT_NETWORK_SOURCES})
 add_library( ${INTERCEPT_NETWORK_NAME} SHARED ${library_sources})
 
+include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${INTERCEPT_INCLUDE_PATH}) 
+
+
+
 target_link_libraries(${INTERCEPT_NETWORK_NAME} ${INTERCEPT_LIB_PATH} ${LINK_LIBS})
 
 target_link_libraries(${INTERCEPT_NETWORK_NAME} ${LINK_LIBS})
@@ -49,15 +53,3 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 	set_target_properties(${INTERCEPT_NETWORK_NAME} PROPERTIES LINK_SEARCH_START_STATIC 1)
 	set_target_properties(${INTERCEPT_NETWORK_NAME} PROPERTIES LINK_SEARCH_END_STATIC 1)
 endif()
-
-
-target_link_libraries(standalone ${INTERCEPT_LIB_PATH} ${LINK_LIBS} ${CMAKE_THREAD_LIBS_INIT})
-
-target_link_libraries(standalone ${LINK_LIBS})
-set_target_properties(standalone PROPERTIES PREFIX "")
-set_target_properties(standalone PROPERTIES FOLDER intercept-network)
-set_target_properties(standalone PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${INTERCEPT_OUTPUT_DIR}/rv/${INTERCEPT_NETWORK_NAME}/intercept")
-set_target_properties(standalone PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG "${INTERCEPT_OUTPUT_DIR}/rv/${INTERCEPT_NETWORK_NAME}/intercept")
-set_target_properties(standalone PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE "${INTERCEPT_OUTPUT_DIR}/rv/${INTERCEPT_NETWORK_NAME}/intercept")
-set_target_properties(standalone PROPERTIES RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL "${INTERCEPT_OUTPUT_DIR}/rv/${INTERCEPT_NETWORK_NAME}/intercept")
-set_target_properties(standalone PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${INTERCEPT_OUTPUT_DIR}/rv/${INTERCEPT_NETWORK_NAME}/intercept")

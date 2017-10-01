@@ -278,3 +278,11 @@ class ACE_Extensions
 {
 	extensions[] += {"ace_advanced_ballistics"};
 };
+
+class Intercept {
+    class ACE {
+        class advanced_ballistics {
+            pluginName = "advanced_ballistics";
+        };
+    };
+};

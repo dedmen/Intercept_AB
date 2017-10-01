@@ -24,7 +24,7 @@ private ["_initStartTime", "_mapSize", "_mapGrids", "_gridCells", "_x", "_y", "_
 _initStartTime = CBA_missionTime;
 _mapSize = getNumber (configFile >> "CfgWorlds" >> worldName >> "MapSize");
 
-if (("ace_advanced_ballistics" callExtension format["init:%1:%2", worldName, _mapSize]) == "Terrain already initialized") exitWith {
+if (worldName advancedBallisticsWorldInit _mapSize) exitWith {
     INFO_1("Terrain already initialized [world: %1]", worldName);
     #ifdef DEBUG_MODE_FULL
         systemChat "AdvancedBallistics: Terrain already initialized";
@@ -57,7 +57,7 @@ INFO_2("Starting Terrain Extension [cells: %1] [world: %2]", _gridCells, worldNa
         _gridHeight = round(getTerrainHeightASL _gridCenter);
         _gridNumObjects = count (_gridCenter nearObjects ["Building", 50]);
         _gridSurfaceIsWater = if (surfaceIsWater _gridCenter) then {1} else {0};
-        "ace_advanced_ballistics" callExtension format["set:%1:%2:%3", _gridHeight, _gridNumObjects, _gridSurfaceIsWater];
+        advancedBallisticsWorldSet [ _gridHeight, _gridNumObjects, _gridSurfaceIsWater];
         GVAR(currentGrid) = GVAR(currentGrid) + 1;
         if (GVAR(currentGrid) >= _gridCells) exitWith {};
     };
