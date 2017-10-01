@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.6)
-project (Intercept-Network)
+project (advanced_ballistics)
 
 find_package (Threads)
 
@@ -44,5 +44,4 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 SET(CMAKE_INCLUDE_CURRENT_DIR ON) 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-add_subdirectory(3rdParty/libzmq)
 add_subdirectory(src)
