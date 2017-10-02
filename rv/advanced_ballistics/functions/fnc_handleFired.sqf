@@ -115,6 +115,11 @@ GVAR(currentbulletID) = (GVAR(currentbulletID) + 1) % 10000;
 
 _aceTimeSecond = floor CBA_missionTime;
 
+GVAR(lastFrameTime) = diag_tickTime;
+GVAR(lastBulletSpeed) = _muzzleVelocity;
+GVAR(airFriction) = _airFriction;
+toFixed 8;
+
 
 //"ace_advanced_ballistics" callExtension format["new:%1:%2:%3:%4:%5:%6:%7:%8:%9:%10:%11:%12:%13:%14:%15:%16:%17:%18", GVAR(currentbulletID), _airFriction, _ballisticCoefficients, _velocityBoundaries, _atmosphereModel, _dragModel, _stabilityFactor, _twistDirection, _muzzleVelocity, _transonicStabilityCoef, getPosASL _projectile, EGVAR(common,mapLatitude), EGVAR(weather,currentTemperature), EGVAR(common,mapAltitude), EGVAR(weather,currentHumidity), overcast, _aceTimeSecond, CBA_missionTime - _aceTimeSecond];
 

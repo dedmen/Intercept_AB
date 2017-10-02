@@ -499,8 +499,132 @@ void __stdcall RVExtension(char *output, int outputSize, const char *function)
     EXTENSION_RETURN();
 }
 
+//hax
+           //from A3debug engine
+uintptr_t placeHookTotalOffs(uintptr_t totalOffset, uintptr_t jmpTo) {
+    DWORD dwVirtualProtectBackup;
 
 
+    /*
+    32bit
+    jmp 0x123122
+    0:  e9 1e 31 12 00          jmp    123123 <_main+0x123123>
+    64bit
+    FF 25 64bit relative
+    */
+#ifdef X64
+    //auto distance = std::max(totalOffset, jmpTo) - std::min(totalOffset, jmpTo);
+    // if distance < 2GB (2147483648) we could use the 32bit relative jmp
+    VirtualProtect(reinterpret_cast<LPVOID>(totalOffset), 14u, 0x40u, &dwVirtualProtectBackup);
+    auto jmpInstr = reinterpret_cast<unsigned char*>(totalOffset);
+    auto addrOffs = reinterpret_cast<uint32_t*>(totalOffset + 1);
+    *jmpInstr = 0x68; //push DWORD
+    *addrOffs = static_cast<uint32_t>(jmpTo) /*- totalOffset - 6*/;//offset
+    *reinterpret_cast<uint32_t*>(totalOffset + 5) = 0x042444C7; //MOV [RSP+4],
+    *reinterpret_cast<uint32_t*>(totalOffset + 9) = static_cast<uint64_t>(jmpTo) >> 32;//DWORD
+    *reinterpret_cast<unsigned char*>(totalOffset + 13) = 0xc3;//ret
+    VirtualProtect(reinterpret_cast<LPVOID>(totalOffset), 14u, dwVirtualProtectBackup, &dwVirtualProtectBackup);
+    return totalOffset + 14;
+#else
+    VirtualProtect(reinterpret_cast<LPVOID>(totalOffset), 5u, 0x40u, &dwVirtualProtectBackup);
+    auto jmpInstr = reinterpret_cast<unsigned char *>(totalOffset);
+    auto addrOffs = reinterpret_cast<unsigned int *>(totalOffset + 1);
+    *jmpInstr = 0xE9;
+    *addrOffs = jmpTo - totalOffset - 5;
+    VirtualProtect(reinterpret_cast<LPVOID>(totalOffset), 5u, dwVirtualProtectBackup, &dwVirtualProtectBackup);
+    return totalOffset + 5;
+#endif
+
+
+}
+#include <fstream>
+#include <sstream>
+uintptr_t jmpBack;
+uintptr_t stackP;
+uintptr_t thisP;
+std::ofstream* logFile;
+void logToFile(std::string& msg) {
+    (*logFile) << msg;
+}
+ struct vec3 {
+     float x;
+     float y;
+     float z;
+};
+float lastDeltaT;
+void logP() {
+    float* deltaT = (float*) (stackP + 0x20);
+    vector3* newPos = (vector3*) (stackP + 0x24);
+    uintptr_t visState = *((uintptr_t*) (thisP + 0xA0));
+    vector3* velo = (vector3*)(visState + 0x48);
+    std::stringstream str;
+    lastDeltaT = *deltaT;
+    str << "enginePre\t" << *deltaT << "\t" << velo->x << "\t" << velo->y << "\t" << velo->z << "\t" << velo->magnitude() << "\n";
+    logToFile(str.str());
+}
+
+void logPPost() {
+    float* deltaT = (float*) (stackP + 0x20);
+    vector3* newPos = (vector3*) (stackP + 0x24);
+    uintptr_t visState = *((uintptr_t*) (thisP + 0xA0));
+    vector3* velo = (vector3*) (visState + 0x48);
+    std::stringstream str;
+    str << "enginePost\t" << *deltaT << "\t" << velo->x << "\t" << velo->y << "\t" << velo->z << "\t" << velo->magnitude() << "\n";
+    logToFile(str.str());
+}
+
+void __declspec(naked) updateP() {
+    __asm
+    {
+        //hookfix
+        sub     esp, 18h;
+        push    esi;
+        mov     esi, ecx;
+        mov stackP, esp;
+        mov thisP, ecx;
+        //newPos esp+1ch+8
+        //deltaT esp+1ch+4
+        //push esi;
+        //pushf;
+        push eax;
+        push ecx;
+        push esp;
+        push esi;
+    }
+    logP();
+    __asm
+    {
+        pop esi;
+        pop esp;
+        pop ecx;
+        pop eax;
+
+        jmp jmpBack
+    }
+}
+
+void __declspec(naked) updatePRetHook() {
+    __asm
+    {
+        push eax;
+        push ecx;
+        push esp;
+        push esi;
+    }
+    logPPost();
+    __asm
+    {
+        pop esi;
+        pop esp;
+        pop ecx;
+        pop eax;
+
+        //fixup
+        pop     esi;
+        add     esp, 18h;
+        retn    0Ch;
+    }
+}
 
 //Intercept
 
@@ -508,6 +632,25 @@ void __stdcall RVExtension(char *output, int outputSize, const char *function)
 
 int intercept::api_version() {
     return 1;
+}
+
+game_value ABLog(game_value msg) {
+     std::stringstream str;
+     str << "scr DT" << (float)msg << "\n";
+     logToFile(str.str());
+     return {};
+}
+
+game_value ABLog2(game_value msg, game_value right) {
+     std::stringstream str;
+     vector3 velo = right;
+     str << "scriptPost\t" << (float) msg << "\t" << velo.x << "\t" << velo.y << "\t" << velo.z << "\t" << velo.magnitude() << "\n";
+     logToFile(str.str());
+     return {};
+ }
+
+game_value advancedBallisticsGetDeltaT() {
+    return lastDeltaT;
 }
 
 
@@ -542,9 +685,38 @@ void  intercept::pre_start() {
         GameDataType::NOTHING,
         GameDataType::ARRAY
     );
+    static auto b5 = intercept::client::host::registerFunction(
+        "advancedBallisticsLOG",
+        "sdsfsdf",
+        userFunctionWrapper<ABLog>,
+        GameDataType::NOTHING,
+        GameDataType::SCALAR
+    );
+    static auto b6 = intercept::client::host::registerFunction(
+        "advancedBallisticsLOG2",
+        "sdsfsdf",
+        userFunctionWrapper<ABLog2>,
+        GameDataType::NOTHING,
+        GameDataType::SCALAR,
+        GameDataType::ARRAY
+    );
+    static auto b7 = intercept::client::host::registerFunction(
+        "advancedBallisticsGetDeltaT",
+        "sdsfsdf",
+        userFunctionWrapper<advancedBallisticsGetDeltaT>,
+        GameDataType::SCALAR
+    );
+    auto A3ModuleBase = (uintptr_t) GetModuleHandleA(nullptr/*"arma3.exe"*/);
+    auto totoffs = A3ModuleBase + 0x009B24C0;
+    auto totoffs2 = A3ModuleBase + 0x009B27E2;
+    placeHookTotalOffs(totoffs, (uintptr_t) updateP);
+    placeHookTotalOffs(totoffs2, (uintptr_t) updatePRetHook);
+
+    jmpBack = totoffs + 6;
+    logFile = new std::ofstream("P:\\logfile.log");
 }
 
-void  intercept::on_frame() {}
+void  intercept::on_frame() { logFile->flush(); }
 
 void  intercept::pre_init() {
     
